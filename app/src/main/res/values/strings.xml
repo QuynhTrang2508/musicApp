@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">MusicApp</string>
+    <string name="title_play">Play</string>
+    <string name="title_next">Next</string>
+    <string name="title_prev">Prev</string>
+    <string name="title_image">Image Song</string>
+    <string name="title_seek">00.00</string>
+    <string name="info_channelId">Channel ID</string>
+    <string name="info_channelName">Channel Name</string>
+    <string name="action_prev">Prev</string>
+    <string name="action_play">Play</string>
+    <string name="action_next">Next</string>
+    <string name="msg_remind">Remind</string>
+    <string name="action_intent">Action intent</string>
+    <string name="action_name">Action</string>
+    <string name="action_createNotification">Create Notification</string>
 </resources>
