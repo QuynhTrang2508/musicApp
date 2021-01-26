@@ -1,20 +1,22 @@
 package com.example.musicapp.data.source.local
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.provider.MediaStore
+import com.example.musicapp.R
 import com.example.musicapp.data.model.Song
 import com.example.musicapp.data.source.SongDataSource
+import com.example.musicapp.data.source.local.utils.OnDataLoadCallback
 
 class SongLocalDataSource : SongDataSource.Local {
-    @SuppressLint("Recycle")
-    override fun getSong(context: Context): MutableList<Song> {
+    override fun getSong(context: Context, callback: OnDataLoadCallback<List<Song>>) {
         val songs = mutableListOf<Song>()
         val uri =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
-            else MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+            } else {
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+            }
         val projection = arrayOf(
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.TITLE,
@@ -27,7 +29,11 @@ class SongLocalDataSource : SongDataSource.Local {
                 songs.add(Song(it))
             }
         }
-        return songs
+        if (songs.isNotEmpty()) {
+            callback.onSuccess(songs)
+        } else {
+            callback.onFail(context.getString(R.string.msg_load))
+        }
     }
 
     companion object {

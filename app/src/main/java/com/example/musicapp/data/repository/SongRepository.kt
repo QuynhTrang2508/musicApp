@@ -3,12 +3,14 @@ package com.example.musicapp.data.repository
 import android.content.Context
 import com.example.musicapp.data.model.Song
 import com.example.musicapp.data.source.SongDataSource
+import com.example.musicapp.data.source.local.utils.OnDataLoadCallback
 
 class SongRepository private constructor(
     private val local: SongDataSource.Local
 ) : SongDataSource.Local {
-    override fun getSong(context: Context): MutableList<Song> {
-        return local.getSong(context)
+
+    override fun getSong(context: Context, callback: OnDataLoadCallback<List<Song>>) {
+        local.getSong(context, callback)
     }
 
     companion object {

@@ -11,10 +11,12 @@ interface SongInterface {
         fun startAnimation()
         fun clearAnimation()
         fun initPlay(index: Int)
+        fun updateAdapter(listSong: List<Song>)
+        fun showError(error: String)
     }
 
     interface Presenter {
-        fun getSongFromLocal(context: Context): List<Song>
+        fun getSongFromLocal(context: Context)
         fun playAction(status: Boolean)
     }
 }

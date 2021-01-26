@@ -11,6 +11,7 @@ import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.SeekBar
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
@@ -24,10 +25,11 @@ import kotlinx.android.synthetic.main.activity_main.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MainActivity : AppCompatActivity(), SongInterface.View, SongAdapter.ClickItem,
+class MainActivity : AppCompatActivity(), SongInterface.View,
     SeekBar.OnSeekBarChangeListener {
-    private var songPresenter: SongPresenter? = null
-    private var songAdapter: SongAdapter? = null
+
+    private var songPresenter: SongInterface.Presenter? = null
+    private var songAdapter: SongAdapter = SongAdapter()
     private var songService: SongService? = null
     private var animation: Animation? = null
     private var musicBound = false
@@ -72,7 +74,7 @@ class MainActivity : AppCompatActivity(), SongInterface.View, SongAdapter.ClickI
     override fun clearAnimation() = imageSong.clearAnimation()
 
     override fun initPlay(index: Int) {
-        constraintPlay.visibility = View.VISIBLE
+        group.visibility = View.VISIBLE
         setPauseButton()
         Glide.with(this).load(R.drawable.music).circleCrop().into(imageSong)
         textSongName.text = songs[index].title
@@ -82,15 +84,21 @@ class MainActivity : AppCompatActivity(), SongInterface.View, SongAdapter.ClickI
         seekBarSong.max = songService?.getDuration()!!
         updateTime()
         startAnimation()
-        startService(index, getString(R.string.action_createNotification))
+        startService(index, getString(R.string.action_create_notification))
     }
 
-    override fun clickSong(song: Song, position: Int) {
-        songService?.stop()
-        songService?.release()
-        songService?.create(position)
-        initPlay(position)
-        resetSeekBar()
+    override fun updateAdapter(listSong: List<Song>) {
+        songs = listSong as MutableList<Song>
+        songAdapter.updateData(listSong)
+        songAdapter.apply {
+            itemClick = { index ->
+                clickSong(index)
+            }
+        }
+    }
+
+    override fun showError(error: String) {
+        Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
     }
 
     override fun onProgressChanged(p0: SeekBar, p1: Int, p2: Boolean) {
@@ -126,9 +134,8 @@ class MainActivity : AppCompatActivity(), SongInterface.View, SongAdapter.ClickI
 
     private fun init() {
         checkPermission()
-        songs = songPresenter!!.getSongFromLocal(this) as MutableList<Song>
-        songAdapter = SongAdapter(songs, this)
         recyclerListSong.adapter = songAdapter
+        songPresenter!!.getSongFromLocal(this)
         if (playIntent == null) {
             playIntent = Intent(this, SongService::class.java)
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE)
@@ -185,18 +192,28 @@ class MainActivity : AppCompatActivity(), SongInterface.View, SongAdapter.ClickI
         }, 0, 1000)
     }
 
+    private fun clickSong(position: Int) {
+        songService.let {
+            it?.stop()
+            it?.release()
+            it?.create(position)
+        }
+        initPlay(position)
+        resetSeekBar()
+    }
+
+
     private fun startService(index: Int, action: String) {
         val serviceIntent = Intent(this, SongService::class.java)
         val bundle = Bundle()
-        bundle.putSerializable(getString(R.string.action_intent), songs[index])
-        serviceIntent.putExtras(bundle)
-        serviceIntent.action = action
+        bundle.putParcelable(getString(R.string.action_intent), songs[index])
+        serviceIntent.putExtras(bundle).action = action
         ContextCompat.startForegroundService(this, serviceIntent)
     }
 
     private var notificationReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            when (intent.extras?.getString(getString(R.string.action_name))) {
+            when (intent.extras?.getString(getString(R.string.action_data))) {
                 getString(R.string.action_next) -> {
                     nextAction()
                     songService?.updateNotificationChangeSong()

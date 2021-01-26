@@ -33,20 +33,20 @@ class SongService : Service(), PlayMusicInterface {
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         val bundle = intent.extras
-        val song = bundle?.getSerializable(getString(R.string.action_intent))
+        val song: Song = bundle!!.getParcelable(getString(R.string.action_intent))!!
         createNotificationChannel(
-            getString(R.string.info_channelId),
-            getString(R.string.info_channelName)
+            getString(R.string.info_channel_id),
+            getString(R.string.info_channel_name)
         )
         startForeground(
             1,
             sendNotification(
                 this,
-                song as Song,
+                song,
                 R.drawable.ic_pause
             )
         )
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     override fun onBind(p0: Intent?): IBinder = SongBinder(this)
@@ -132,9 +132,11 @@ class SongService : Service(), PlayMusicInterface {
     }
 
     private fun initMusicPlayer() {
-        mediaPlayer?.setWakeMode(applicationContext, PowerManager.PARTIAL_WAKE_LOCK)
-        mediaPlayer?.setAudioStreamType(AudioManager.STREAM_MUSIC)
-        mediaPlayer?.isLooping = true
+        mediaPlayer.let {
+            it?.setWakeMode(applicationContext, PowerManager.PARTIAL_WAKE_LOCK)
+            it?.setAudioStreamType(AudioManager.STREAM_MUSIC)
+            it?.isLooping = true
+        }
     }
 
     fun setList(songList: ArrayList<Song>) {

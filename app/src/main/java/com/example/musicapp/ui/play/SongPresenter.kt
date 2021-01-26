@@ -3,13 +3,23 @@ package com.example.musicapp.ui.play
 import android.content.Context
 import com.example.musicapp.data.model.Song
 import com.example.musicapp.data.repository.SongRepository
+import com.example.musicapp.data.source.local.utils.OnDataLoadCallback
 
 class SongPresenter(
     private val songView: SongInterface.View,
     private val songRepository: SongRepository
 ) : SongInterface.Presenter {
-    override fun getSongFromLocal(context: Context): List<Song> {
-        return songRepository.getSong(context)
+
+    override fun getSongFromLocal(context: Context) {
+        songRepository.getSong(context, object : OnDataLoadCallback<List<Song>> {
+            override fun onSuccess(data: List<Song>) {
+                songView.updateAdapter(data)
+            }
+
+            override fun onFail(message: String) {
+                songView.showError(message)
+            }
+        })
     }
 
     override fun playAction(status: Boolean) {
