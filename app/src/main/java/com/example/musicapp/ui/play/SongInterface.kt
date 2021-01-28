@@ -1,6 +1,5 @@
 package com.example.musicapp.ui.play
 
-import android.content.Context
 import com.example.musicapp.data.model.Song
 
 interface SongInterface {
@@ -16,7 +15,7 @@ interface SongInterface {
     }
 
     interface Presenter {
-        fun getSongFromLocal(context: Context)
+        fun getSongFromLocal()
         fun playAction(status: Boolean)
     }
 }

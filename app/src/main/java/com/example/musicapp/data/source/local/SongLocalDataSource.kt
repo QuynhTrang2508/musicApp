@@ -3,13 +3,21 @@ package com.example.musicapp.data.source.local
 import android.content.Context
 import android.os.Build
 import android.provider.MediaStore
-import com.example.musicapp.R
 import com.example.musicapp.data.model.Song
 import com.example.musicapp.data.source.SongDataSource
+import com.example.musicapp.data.source.local.utils.LocalAsyncTask
 import com.example.musicapp.data.source.local.utils.OnDataLoadCallback
 
-class SongLocalDataSource : SongDataSource.Local {
-    override fun getSong(context: Context, callback: OnDataLoadCallback<List<Song>>) {
+@Suppress("DEPRECATION")
+class SongLocalDataSource(private var context: Context) : SongDataSource {
+
+    override fun getSong(callback: OnDataLoadCallback<List<Song>>) {
+        LocalAsyncTask(callback) {
+            getSong()
+        }.execute()
+    }
+
+    private fun getSong(): List<Song> {
         val songs = mutableListOf<Song>()
         val uri =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -29,15 +37,12 @@ class SongLocalDataSource : SongDataSource.Local {
                 songs.add(Song(it))
             }
         }
-        if (songs.isNotEmpty()) {
-            callback.onSuccess(songs)
-        } else {
-            callback.onFail(context.getString(R.string.msg_load))
-        }
+        return songs
     }
 
     companion object {
         private var instance: SongLocalDataSource? = null
-        fun getInstance() = instance ?: SongLocalDataSource().also { instance = it }
+        fun getInstance(context: Context) =
+            instance ?: SongLocalDataSource(context).also { instance = it }
     }
 }

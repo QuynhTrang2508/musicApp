@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity(), SongInterface.View,
     SeekBar.OnSeekBarChangeListener {
 
     private var songPresenter: SongInterface.Presenter? = null
-    private var songAdapter: SongAdapter = SongAdapter()
+    private var songAdapter: SongAdapter = SongAdapter(clickItem = { index -> clickSong(index) })
     private var songService: SongService? = null
     private var animation: Animation? = null
     private var musicBound = false
@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity(), SongInterface.View,
         setContentView(R.layout.activity_main)
         registerReceiver(notificationReceiver, IntentFilter(getString(R.string.action_intent)))
         songPresenter =
-            SongPresenter(this, SongRepository.getInstance(SongLocalDataSource.getInstance()))
+            SongPresenter(this, SongRepository.getInstance(SongLocalDataSource.getInstance(this)))
         if (checkPermission()) init()
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) requestPermissions(permission, 0)
         animation = AnimationUtils.loadAnimation(this, R.anim.rotate)
@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity(), SongInterface.View,
         super.onDestroy()
         songService?.stop()
         unbindService(musicConnection)
-        stopService(Intent(this, SongService::class.java))
+        stopService(getServiceIntent())
         unregisterReceiver(notificationReceiver)
     }
 
@@ -90,11 +90,6 @@ class MainActivity : AppCompatActivity(), SongInterface.View,
     override fun updateAdapter(listSong: List<Song>) {
         songs = listSong as MutableList<Song>
         songAdapter.updateData(listSong)
-        songAdapter.apply {
-            itemClick = { index ->
-                clickSong(index)
-            }
-        }
     }
 
     override fun showError(error: String) {
@@ -135,7 +130,7 @@ class MainActivity : AppCompatActivity(), SongInterface.View,
     private fun init() {
         checkPermission()
         recyclerListSong.adapter = songAdapter
-        songPresenter!!.getSongFromLocal(this)
+        songPresenter!!.getSongFromLocal()
         if (playIntent == null) {
             playIntent = Intent(this, SongService::class.java)
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE)
@@ -202,7 +197,6 @@ class MainActivity : AppCompatActivity(), SongInterface.View,
         resetSeekBar()
     }
 
-
     private fun startService(index: Int, action: String) {
         val serviceIntent = Intent(this, SongService::class.java)
         val bundle = Bundle()
@@ -210,6 +204,8 @@ class MainActivity : AppCompatActivity(), SongInterface.View,
         serviceIntent.putExtras(bundle).action = action
         ContextCompat.startForegroundService(this, serviceIntent)
     }
+
+    private fun getServiceIntent() = Intent(this, SongService::class.java)
 
     private var notificationReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {

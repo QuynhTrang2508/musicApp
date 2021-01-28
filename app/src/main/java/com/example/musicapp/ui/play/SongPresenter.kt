@@ -1,6 +1,5 @@
 package com.example.musicapp.ui.play
 
-import android.content.Context
 import com.example.musicapp.data.model.Song
 import com.example.musicapp.data.repository.SongRepository
 import com.example.musicapp.data.source.local.utils.OnDataLoadCallback
@@ -10,8 +9,8 @@ class SongPresenter(
     private val songRepository: SongRepository
 ) : SongInterface.Presenter {
 
-    override fun getSongFromLocal(context: Context) {
-        songRepository.getSong(context, object : OnDataLoadCallback<List<Song>> {
+    override fun getSongFromLocal() {
+        songRepository.getSong(object : OnDataLoadCallback<List<Song>> {
             override fun onSuccess(data: List<Song>) {
                 songView.updateAdapter(data)
             }

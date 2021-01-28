@@ -9,44 +9,41 @@ import com.example.musicapp.R
 import com.example.musicapp.data.model.Song
 import kotlinx.android.synthetic.main.item_song.view.*
 
-class SongAdapter : RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
+class SongAdapter(var clickItem: ((Int) -> Unit)) :
+    RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
 
     private var songs = mutableListOf<Song>()
-    var itemClick: ((Int) -> Unit)? = null
 
-    class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        var itemClick: ((Int) -> Unit)? = null
-        fun bindData(song: Song, index: Int) {
+    class SongViewHolder(itemView: View, private var itemClick: (Int) -> Unit) :
+        RecyclerView.ViewHolder(itemView) {
+        init {
+            itemView.setOnClickListener {
+                itemClick.invoke(adapterPosition)
+            }
+        }
+
+        fun bindData(song: Song) {
             itemView.apply {
                 textSongTitle.text = song.title
                 textSongArtist.text = song.artist
                 Glide.with(context).load(R.drawable.song).circleCrop().into(imageSongItem)
-                this.setOnClickListener {
-                    itemClick?.invoke(index)
-                }
             }
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_song, parent, false)
-        return SongViewHolder(view).apply {
-            itemClick = { index ->
-                this@SongAdapter.itemClick?.invoke(index)
-            }
-        }
+        return SongViewHolder(view, clickItem)
     }
 
-    override fun getItemCount(): Int {
-        return songs.size
-    }
+    override fun getItemCount() = songs.size
 
     override fun onBindViewHolder(holder: SongViewHolder, position: Int) {
-        holder.bindData(songs[position], position)
+        holder.bindData(songs[position])
     }
 
     fun updateData(newSong: List<Song>) {
-        this.songs = newSong as MutableList<Song>
+        this.songs = newSong.toMutableList()
         notifyDataSetChanged()
     }
 }
